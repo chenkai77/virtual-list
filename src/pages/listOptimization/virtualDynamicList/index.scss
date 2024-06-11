@@ -1,0 +1,32 @@
+.container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 300px;
+  height: 500px;
+  overflow-y: auto;
+  border: 1px solid #e5e6eb;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  .hide-placeholder-element {
+    width: 100%;
+  }
+  .list-wrap {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    .list-item {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 300px;
+      height: 50px;
+      font-size: 16px;
+      text-align: center;
+      border-top: 1px solid #e5e6eb;
+      box-sizing: border-box;
+    }
+  }
+}
