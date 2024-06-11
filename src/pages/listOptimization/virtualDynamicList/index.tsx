@@ -1,33 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import "./index.scss";
+import { getList, IItemData } from "../data";
+import ListItem from "../listItem/index";
 
-interface IListItem {
-  value: string;
-  index: number;
-  height: number;
-}
-
-interface IListInfo {
-  index: number;
-  height: number;
-  top: number;
-  bottom: number;
-}
-
-const allList: IListItem[] = [];
-
-const initList = () => {
-  for (let i = 0; i < 1000; i++) {
-    allList.push({
-      value: "item-" + (i + 1),
-      index: i,
-      height: Math.floor(Math.random() * 80 + 20), // 高度为 20-100 之间的随机数
-    });
-  }
-};
-initList();
+type IListInfo = IItemData & { height: number; top: number; bottom: number };
 
 export default function VirtualDynamicList() {
+  // 所有列表数据
+  const allList = useRef<IItemData[]>([]);
   // 最外层包裹元素
   const containerWrap = useRef<HTMLDivElement>(null);
   // 列表的包裹元素
@@ -35,24 +15,32 @@ export default function VirtualDynamicList() {
   // 偏移量
   const [translateYOffset, setTranslateYOffset] = useState(0);
   // 可见的列表数据
-  const [visibleList, setVisibleList] = useState<IListItem[]>([]);
+  const [visibleList, setVisibleList] = useState<IItemData[]>([]);
   // 预估高度
   const estimatedHeight = 70;
   // 上下增加缓冲列表项个数
   const buffer = 5;
-  // 列表缓存高度数据
-  const listInfo = useRef<IListInfo[]>(
-    allList.map((e, i) => ({
+  // 缓存高度数据的列表
+  const listInfo = useRef<IListInfo[]>([]);
+
+  // 初始化列表
+  const initList = () => {
+    const now = Date.now();
+    const arr = getList();
+    allList.current = arr;
+    listInfo.current = arr.map((e, i) => ({
+      ...e,
       index: e.index,
       height: estimatedHeight,
       top: i * estimatedHeight,
       bottom: (i + 1) * estimatedHeight,
-    }))
-  );
-
-  useEffect(() => {
+    }));
     listScroll();
-  }, []);
+    console.log("JS运行时间：", Date.now() - now);
+    setTimeout(() => {
+      console.log("总运行时间：", Date.now() - now);
+    }, 0);
+  };
 
   useEffect(() => {
     const listItemDoms = listWrap.current?.children;
@@ -128,40 +116,41 @@ export default function VirtualDynamicList() {
     }
     const listWrapDom = listWrap.current;
     const endIndex = getIndex(scrollTop + listWrapDom!.offsetHeight);
-    setVisibleList(allList.slice(sliceStart, endIndex + buffer));
+    setVisibleList(allList.current.slice(sliceStart, endIndex + buffer));
   };
 
   const renderList = () => {
-    return visibleList.map((e) => (
-      <div
-        key={e.value}
-        className="list-item"
-        style={{ height: e.height + "px" }}
-      >
-        <div>
-          {e.value}(高度： {e.height})
-        </div>
+    return visibleList.map((itemData) => (
+      <div key={itemData.index}>
+        <ListItem itemData={itemData}></ListItem>
       </div>
     ));
   };
 
   return (
-    <div className="container" ref={containerWrap} onScroll={listScroll}>
-      <div
-        className="hide-placeholder-element"
-        style={{
-          height: listInfo.current[listInfo.current.length - 1].bottom + "px",
-        }}
-      ></div>
-      <div
-        className="list-wrap"
-        ref={listWrap}
-        style={{
-          transform: `translateY(${translateYOffset + "px"})`,
-        }}
-      >
-        {renderList()}
+    <div>
+      <div className="container" ref={containerWrap} onScroll={listScroll}>
+        <div
+          className="hide-placeholder-element"
+          style={{
+            height: listInfo.current.length
+              ? listInfo.current[listInfo.current.length - 1].bottom + "px"
+              : 0,
+          }}
+        ></div>
+        <div
+          className="list-wrap"
+          ref={listWrap}
+          style={{
+            transform: `translateY(${translateYOffset + "px"})`,
+          }}
+        >
+          {renderList()}
+        </div>
       </div>
+      <button className="button" onClick={() => initList()}>
+        列表数据赋值
+      </button>
     </div>
   );
 }

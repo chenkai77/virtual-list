@@ -1,25 +1,31 @@
 import { useState } from "react";
 import "./index.scss";
 import ListItem from "../listItem/index";
-import getList, { IItemData } from "../data";
+// 获取随机的列表数据
+import { getList, IItemData } from "../data";
 
 export default function OrdinaryList() {
-  const [list, setList] = useState<IItemData[]>([]);
+  // 所有列表数据
+  const [allList, setAllList] = useState<IItemData[]>([]);
+  // 列表项固定高度
+  const listItemHeight = "50px";
 
+  // 点击初始化列表
   const initList = () => {
     const now = Date.now();
     const arr = getList();
-    setList(arr);
+    setAllList(arr);
     console.log("JS运行时间：", Date.now() - now);
     setTimeout(() => {
       console.log("总运行时间：", Date.now() - now);
     }, 0);
   };
 
+  // 渲染列表
   const renderList = () => {
-    return list.map((itemData) => (
-      <div key={itemData.order}>
-        <ListItem itemData={itemData}></ListItem>
+    return allList.map((itemData) => (
+      <div key={itemData.index}>
+        <ListItem itemData={{ ...itemData, height: listItemHeight }}></ListItem>
       </div>
     ));
   };

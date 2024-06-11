@@ -1,10 +1,11 @@
 import { useState, useRef } from "react";
 import "./index.scss";
-import getList, { IItemData } from "../data";
+import { getList, IItemData } from "../data";
 import ListItem from "../listItem/index";
 
 export default function VirtualList() {
-  const [list, setList] = useState<IItemData[]>([]);
+  // 列表全部数据
+  const [allList, setAllList] = useState<IItemData[]>([]);
   // 最外层包裹元素
   const containerWrap = useRef<HTMLDivElement>(null);
   // 列表的包裹元素
@@ -20,10 +21,12 @@ export default function VirtualList() {
   // 上下增加缓冲列表项个数
   const buffer = 5;
 
+  // 点击获取列表数据
   const initList = () => {
     const now = Date.now();
+    // 获取列表
     const arr = getList();
-    setList(arr);
+    setAllList(arr);
     const listWrapDom = listWrap.current;
     const listSizeNum = Math.ceil(listWrapDom!.offsetHeight / itemHeight);
     listSize.current = listSizeNum;
@@ -46,13 +49,17 @@ export default function VirtualList() {
       sliceStart = 0;
     }
     setStartIndex(sliceStart);
-    setVisibleList(list.slice(sliceStart, start + listSize.current + buffer));
+    setVisibleList(
+      allList.slice(sliceStart, start + listSize.current + buffer)
+    );
   };
 
   const renderList = () => {
     return visibleList.map((itemData) => (
-      <div key={itemData.order}>
-        <ListItem itemData={itemData}></ListItem>
+      <div key={itemData.index}>
+        <ListItem
+          itemData={{ ...itemData, height: itemHeight + "px" }}
+        ></ListItem>
       </div>
     ));
   };
@@ -62,7 +69,7 @@ export default function VirtualList() {
       <div className="container" ref={containerWrap} onScroll={listScroll}>
         <div
           className="hide-placeholder-element"
-          style={{ height: list.length * itemHeight + "px" }}
+          style={{ height: allList.length * itemHeight + "px" }}
         ></div>
         <div
           className="list-wrap"
