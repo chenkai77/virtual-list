@@ -10,14 +10,12 @@ export default function VirtualList() {
   const containerWrap = useRef<HTMLDivElement>(null);
   // 列表的包裹元素
   const listWrap = useRef<HTMLDivElement>(null);
-  // 开始的索引
-  const [startIndex, setStartIndex] = useState(0);
-  // 可见的列表个数
+  // 列表个数
   const listSize = useRef(0);
   // 列表每一项的高度
   const itemHeight = 50;
-  // 上下增加缓冲列表项个数
-  const buffer = 5;
+  // 开始的索引
+  const [startIndex, setStartIndex] = useState(0);
 
   // 点击获取列表数据
   const initList = () => {
@@ -25,29 +23,15 @@ export default function VirtualList() {
     const arr = getList();
     setAllList(arr);
     const listWrapDom = listWrap.current;
+    // 获取可视区域需要展示的列表项个数
     const listSizeNum = Math.ceil(listWrapDom!.offsetHeight / itemHeight);
     listSize.current = listSizeNum;
   };
 
-  // 滚动事件
-  const listScroll = () => {
-    const containerWrapDom = containerWrap.current;
-    const scrollTop = containerWrapDom?.scrollTop || 0;
-    const start = Math.floor(scrollTop / itemHeight);
-    let sliceStart = start;
-    if (start > buffer) {
-      sliceStart = start - buffer;
-    } else {
-      sliceStart = 0;
-    }
-    setStartIndex(sliceStart);
-  };
-
-  // 可见区域列表渲染
   const renderList = () => {
     const visibleList = allList.slice(
       startIndex,
-      startIndex + listSize.current + 2 * buffer
+      startIndex + listSize.current
     );
     return visibleList.map((itemData) => (
       <div key={itemData.index} data-index={itemData.index + 1}>
@@ -60,16 +44,12 @@ export default function VirtualList() {
 
   return (
     <div>
-      <div className="container" ref={containerWrap} onScroll={listScroll}>
+      <div className="container" ref={containerWrap}>
         <div
           className="placeholder-element"
           style={{ height: allList.length * itemHeight + "px" }}
         ></div>
-        <div
-          className="list-wrap"
-          ref={listWrap}
-          style={{ transform: `translateY(${startIndex * itemHeight + "px"})` }}
-        >
+        <div className="list-wrap" ref={listWrap}>
           {renderList()}
         </div>
       </div>

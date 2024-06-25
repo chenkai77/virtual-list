@@ -1,7 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import VirtualList from "../pages/listOptimization/virtualList";
+import VirtualListIO from "../pages/listOptimization/virtualListIO";
 import OrdinaryList from "../pages/listOptimization/ordinaryList";
 import VirtualDynamicList from "../pages/listOptimization/virtualDynamicList";
+import Test from "../pages/listOptimization/test";
 import App from "../App";
 
 const routes = createBrowserRouter([
@@ -18,8 +20,16 @@ const routes = createBrowserRouter([
         element: <VirtualList />,
       },
       {
+        path: "virtual_list_io",
+        element: <VirtualListIO />,
+      },
+      {
         path: "virtual_dynamic_list",
         element: <VirtualDynamicList />,
+      },
+      {
+        path: "test",
+        element: <Test />,
       },
     ],
   },

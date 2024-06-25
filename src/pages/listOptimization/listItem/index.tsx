@@ -11,7 +11,9 @@ export default function OrdinaryList({
       <div className="avatar-box">
         <img className="image" src={itemData.image} alt="" />;
       </div>
-      <div className="text-box">{itemData.content}</div>
+      <div className="text-box">
+        <p>{itemData.content}</p>
+      </div>
     </div>
   );
 }
