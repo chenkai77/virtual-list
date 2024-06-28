@@ -31,6 +31,7 @@ export const getList = () => {
     const imageRandom = Math.floor(Math.random() * 7);
     const textRandomStart = Math.floor(Math.random() * 200);
     const textRandomLength = Math.floor(Math.random() * 200);
+
     data.push({
       index: i,
       image: avatarList[imageRandom],

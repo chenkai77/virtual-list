@@ -10,9 +10,6 @@ export default function VirtualList() {
   const containerWrap = useRef<HTMLDivElement>(null);
   // 列表的包裹元素
   const listWrap = useRef<HTMLDivElement>(null);
-  // IntersectionObserver实例
-  const [intersectionObserver, setIntersectionObserver] =
-    useState<IntersectionObserver>();
   // 可见区域的第一个列表项
   const startElement = useRef<HTMLDivElement>(null);
   // 可见区域的最后一个列表项
@@ -26,58 +23,52 @@ export default function VirtualList() {
   // 上下增加缓冲列表项个数
   const buffer = 5;
 
-  const initIntersectionObserver = () => {
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        // 第一个元素可见时
-        if (
-          entry.isIntersecting &&
-          entry.target.getAttribute("data-order") === "top"
-        ) {
-          if (startIndex > buffer) {
-            setStartIndex(startIndex - buffer);
-            setEndIndex(endIndex - buffer);
-          } else {
-            const diff = startIndex - 0;
-            setEndIndex(endIndex - diff);
-            setStartIndex(0);
-          }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      // 第一个元素可见时
+      if (
+        entry.isIntersecting &&
+        entry.target.getAttribute("data-order") === "top"
+      ) {
+        if (startIndex > buffer) {
+          setStartIndex(startIndex - buffer);
+          setEndIndex(endIndex - buffer);
+        } else {
+          const diff = startIndex - 0;
+          setEndIndex(endIndex - diff);
+          setStartIndex(0);
         }
-        // 最后一个元素可见时
-        if (
-          entry.isIntersecting &&
-          entry.target.getAttribute("data-order") === "bottom"
-        ) {
-          if (endIndex < allList.length - buffer) {
-            setStartIndex(startIndex + buffer);
-            setEndIndex(endIndex + buffer);
-          } else {
-            const diff = allList.length - endIndex;
-            setStartIndex(startIndex + diff);
-            setEndIndex(allList.length);
-          }
+      }
+      // 最后一个元素可见时
+      if (
+        entry.isIntersecting &&
+        entry.target.getAttribute("data-order") === "bottom"
+      ) {
+        if (endIndex < allList.length - buffer) {
+          setStartIndex(startIndex + buffer);
+          setEndIndex(endIndex + buffer);
+        } else {
+          const diff = allList.length - endIndex;
+          setStartIndex(startIndex + diff);
+          setEndIndex(allList.length);
         }
-      });
+      }
     });
+  });
+
+  useEffect(() => {
     if (startElement.current) {
       io.observe(startElement.current);
     }
     if (endElement.current) {
       io.observe(endElement.current);
     }
-    setIntersectionObserver(io);
-  };
-
-  useEffect(() => {
-    initIntersectionObserver();
     return () => {
-      if (intersectionObserver) {
-        if (startElement.current) {
-          intersectionObserver.unobserve(startElement.current);
-        }
-        if (endElement.current) {
-          intersectionObserver.unobserve(endElement.current);
-        }
+      if (startElement.current) {
+        io.unobserve(startElement.current);
+      }
+      if (endElement.current) {
+        io.unobserve(endElement.current);
       }
     };
   }, [endIndex]);

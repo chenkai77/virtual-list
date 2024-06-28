@@ -1,7 +1,7 @@
 .list-item {
   width: 300px;
   font-size: 20px;
-  text-align: center;
+  // text-align: center;
   line-height: 50px;
   border-top: 1px solid #e5e6eb;
   box-sizing: border-box;
@@ -28,5 +28,9 @@
     line-height: 14px;
     overflow: hidden;
     height: 100%;
+  }
+  .http-image {
+    width: 300px;
+    height: auto;
   }
 }

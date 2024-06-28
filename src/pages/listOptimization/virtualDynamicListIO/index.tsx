@@ -14,12 +14,69 @@ export default function VirtualDynamicList() {
   const listWrap = useRef<HTMLDivElement>(null);
   // 偏移量
   const [translateYOffset, setTranslateYOffset] = useState(0);
-  // 可见的列表数据
-  const [visibleList, setVisibleList] = useState<IItemData[]>([]);
+  // 可见区域的第一个列表项
+  const startElement = useRef<HTMLDivElement>(null);
+  // 可见区域的最后一个列表项
+  const endElement = useRef<HTMLDivElement>(null);
+  // 开始的索引
+  const [startIndex, setStartIndex] = useState(0);
+  // 结束的索引
+  const [endIndex, setEndIndex] = useState(0);
   // 预估高度
   const estimatedHeight = 70;
   // 上下增加缓冲列表项个数
   const buffer = 5;
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      // 第一个元素可见时
+      if (
+        entry.isIntersecting &&
+        entry.target.getAttribute("data-order") === "top"
+      ) {
+        if (startIndex > buffer) {
+          setStartIndex(startIndex - buffer);
+          setEndIndex(endIndex - buffer);
+        } else {
+          const diff = startIndex - 0;
+          setEndIndex(endIndex - diff);
+          setStartIndex(0);
+        }
+      }
+      // 最后一个元素可见时
+      if (
+        entry.isIntersecting &&
+        entry.target.getAttribute("data-order") === "bottom"
+      ) {
+        if (endIndex < allList.current.length - buffer) {
+          setStartIndex(startIndex + buffer);
+          setEndIndex(endIndex + buffer);
+        } else {
+          const diff = allList.current.length - endIndex;
+          setStartIndex(startIndex + diff);
+          setEndIndex(allList.current.length);
+        }
+      }
+    });
+  });
+
+  useEffect(() => {
+    if (startElement.current) {
+      io.observe(startElement.current);
+    }
+    if (endElement.current) {
+      io.observe(endElement.current);
+    }
+    setTranslateYOffset(allList.current[startIndex]?.top || 0);
+    return () => {
+      if (startElement.current) {
+        io.unobserve(startElement.current);
+      }
+      if (endElement.current) {
+        io.unobserve(endElement.current);
+      }
+    };
+  }, [endIndex]);
 
   // 初始化列表
   const initList = () => {
@@ -30,7 +87,9 @@ export default function VirtualDynamicList() {
       top: i * estimatedHeight,
       bottom: (i + 1) * estimatedHeight,
     }));
-    listScroll();
+    const listWrapDom = listWrap.current;
+    const endIndex = getIndex(listWrapDom!.offsetHeight);
+    setEndIndex(endIndex + buffer * 2);
   };
 
   useEffect(() => {
@@ -40,7 +99,7 @@ export default function VirtualDynamicList() {
       let firstDifferenceIndex = undefined;
       for (let i = 0; i < listItemDoms.length; i++) {
         const itemDom = listItemDoms[i] as HTMLElement;
-        const index = visibleList[i].index;
+        const index = Number(itemDom.getAttribute("data-index")) - 1;
         const differenceValue =
           allList.current[index].height - itemDom.offsetHeight;
         if (differenceValue) {
@@ -91,34 +150,35 @@ export default function VirtualDynamicList() {
     return resultIndex;
   };
 
-  // 滚动事件
-  const listScroll = () => {
-    const containerWrapDom = containerWrap.current;
-    const scrollTop = containerWrapDom?.scrollTop || 0;
-    const startIndex = getIndex(scrollTop);
-    let sliceStart = startIndex;
-    if (startIndex > buffer) {
-      sliceStart = startIndex - buffer;
-    } else {
-      sliceStart = 0;
-    }
-    setTranslateYOffset(allList.current[sliceStart].top);
-    const listWrapDom = listWrap.current;
-    const endIndex = getIndex(scrollTop + listWrapDom!.offsetHeight);
-    setVisibleList(allList.current.slice(sliceStart, endIndex + buffer));
-  };
-
+  // 可见区域列表渲染
   const renderList = () => {
-    return visibleList.map((itemData) => (
-      <div key={itemData.index} data-index={itemData.index + 1}>
-        <ListItem itemData={{ ...itemData, height: "auto" }}></ListItem>
-      </div>
-    ));
+    const visibleList = allList.current.slice(startIndex, endIndex);
+    return visibleList.map((itemData, index) => {
+      let ref = null;
+      let position = "";
+      if (index === 0) {
+        ref = startElement;
+        position = "top";
+      } else if (index === visibleList.length - 1) {
+        ref = endElement;
+        position = "bottom";
+      }
+      return (
+        <div
+          key={itemData.index}
+          ref={ref}
+          data-order={position}
+          data-index={itemData.index + 1}
+        >
+          <ListItem itemData={{ ...itemData, height: "auto" }}></ListItem>
+        </div>
+      );
+    });
   };
 
   return (
     <div>
-      <div className="container" ref={containerWrap} onScroll={listScroll}>
+      <div className="container" ref={containerWrap}>
         <div
           className="hide-placeholder-element"
           style={{

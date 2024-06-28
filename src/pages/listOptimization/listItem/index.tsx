@@ -12,6 +12,7 @@ export default function OrdinaryList({
         <img className="image" src={itemData.image} alt="" />;
       </div>
       <div className="text-box">
+        <p>order:{itemData.index + 1}</p>
         <p>{itemData.content}</p>
       </div>
     </div>
